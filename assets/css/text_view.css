@@ -1,0 +1,10 @@
+.note-form {
+    padding: .5em;
+    border: 1px solid #E0E0E0;
+    border-radius: .3em;
+}
+
+    .note-form .form-group {
+        margin: 0;
+        padding: 0;
+    }

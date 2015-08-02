@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "90bf5ab7ac4f6ec0ecf0673df59109cb",
+    "hash": "822d1463b3854b759d466c80210efeb2",
     "packages": [
         {
             "name": "bower-asset/jquery",
@@ -271,17 +271,62 @@
             "time": "2013-11-30 08:25:19"
         },
         {
+            "name": "tesjin/yii2-angularjs",
+            "version": "1.2.28",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tesjin/yii2-angularjs.git",
+                "reference": "49ddc788eea98c51f72fdc87a6fd5ad876b5738c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tesjin/yii2-angularjs/zipball/49ddc788eea98c51f72fdc87a6fd5ad876b5738c",
+                "reference": "49ddc788eea98c51f72fdc87a6fd5ad876b5738c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "yii\\angularjs\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Vladislav Orlov",
+                    "email": "orlov@tesjin.ru",
+                    "homepage": "http://www.tesjin.ru",
+                    "role": "Developer"
+                }
+            ],
+            "description": "The assets bundle of Angular.js for Yii2.",
+            "keywords": [
+                "angular",
+                "angular.js",
+                "angularjs",
+                "yii",
+                "yii2"
+            ],
+            "time": "2015-01-04 15:32:27"
+        },
+        {
             "name": "yiisoft/yii2",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "ac7adf53f1bc2226028ff0aa916b60d8beb8c4e2"
+                "reference": "40df0e4d27e22b5f7ee471a4b582e922e039c69c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/ac7adf53f1bc2226028ff0aa916b60d8beb8c4e2",
-                "reference": "ac7adf53f1bc2226028ff0aa916b60d8beb8c4e2",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/40df0e4d27e22b5f7ee471a4b582e922e039c69c",
+                "reference": "40df0e4d27e22b5f7ee471a4b582e922e039c69c",
                 "shasum": ""
             },
             "require": {
@@ -356,7 +401,7 @@
                 "framework",
                 "yii2"
             ],
-            "time": "2015-07-31 00:19:23"
+            "time": "2015-07-31 22:42:40"
         },
         {
             "name": "yiisoft/yii2-composer",

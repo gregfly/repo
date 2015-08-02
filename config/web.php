@@ -39,6 +39,12 @@ $config = [
                 '' => 'site/index',
             ],
         ],
+        'assetManager' => [
+//            'forceCopy' => true,
+        ],
+        'mutex' => [
+            'class' => 'yii\mutex\MysqlMutex',
+        ],
     ],
     'params' => $params,
 ];

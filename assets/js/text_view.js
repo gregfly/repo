@@ -1,41 +1,146 @@
+function BaseEngine($scope) {
+    this._$scope = $scope;
+    this._acts = [];
+    this._isActivate = false;
+}
+
+BaseEngine.prototype.findTextarea = function(noteId) {
+    return $('#note-' + noteId);
+};
+
+BaseEngine.prototype.findNote = function(noteId) {
+    var r = undefined;
+    $.each(this._$scope.notes, function(kn, vn) {
+        $.each(vn, function(k, v) {
+            if (v.ID == noteId) {
+                r = v;
+            }
+        });
+    });
+    return r;
+};
+
+BaseEngine.prototype.appendNote = function(data) {
+    this._$scope.notes[data.ParagraphID].push(data);
+};
+
+BaseEngine.prototype.deleteNote = function(noteId) {
+    var index = -1;
+    var self = this;
+    $.each(self._$scope.notes, function(kn, vn) {
+        $.each(vn, function(k, v) {
+            if (v.ID == noteId) {
+                index = k;
+            }
+        });
+        if (index >= 0) {
+            self._$scope.notes[kn].splice(index, 1);
+            index = -1;
+        }
+    });
+};
+
+BaseEngine.prototype.append = function(cmd) {
+    this._acts.push(cmd);
+};
+
+BaseEngine.prototype.exec = function(cmd) {
+    console.log('===========exec===========');
+    console.log(cmd);
+    var note = this.findNote(cmd.NoteID);
+    if (cmd.Type === 'w') {
+        if (cmd.CursorBegin === cmd.CursorEnd) {
+            note.Name = note.Name.insertAt(cmd.CursorBegin, cmd.String);
+        console.log('inserted');
+        } else {
+            note.Name = note.Name.replaceAt(cmd.CursorBegin, cmd.CursorEnd, cmd.String);
+        console.log('replaced');
+        }
+        note.NoteActionID = cmd.ID;
+        console.log(note.Name);
+    }
+    if (cmd.Type === 'c') {
+        this.appendNote({
+            'ID': cmd.NoteID,
+            'NoteActionID': cmd.ID,
+            'Name': cmd.String,
+            'ParagraphID': cmd.ParagraphID
+        });
+    }
+    if (cmd.Type === 'r') {
+        this.deleteNote(cmd.NoteID);
+    }
+};
+
+BaseEngine.prototype.load = function() {
+    if (this._isActivate) {
+        return;
+    }
+    var self = this;
+    this._isActivate = true;
+    var tmp = [];
+    $.each(this._$scope.notes, function(kn, vn) {
+        $.each(vn, function(k, v) {
+            tmp.push(v);
+        });
+    });
+    $.get('/note/bind', {'tid': this._$scope.textId, 'token': this._$scope.token, 'reqs': tmp}, function(data) {
+        $.each(data.cmds, function(key, cmd) {
+            self.exec(cmd);
+        });
+        self._isActivate = false;
+    }).fail(function() {
+        //
+    });
+};
+
+BaseEngine.prototype.save = function() {
+    if (this._acts.length === 0 || this._isActivate) {
+        return;
+    }
+    var self = this;
+    this._isActivate = true;
+    var tmp = this._acts;
+    this._acts = [];
+    $.get('/note/save', {'acts': tmp}, function(data) {
+        self._isActivate = false;
+    }).fail(function() {
+        var oldActs = self._acts;
+        self._acts = [];
+        $.each(tmp, function(v) {
+            self._acts.push(v);
+        });
+        $.each(oldActs, function(v) {
+            self._acts.push(v);
+        });
+    });
+};
+
 angular
 .module('notes', ['ngResource'])
 .controller('notesController', function($scope, $timeout, $interval) {
-    function getTextarea(noteId) {
-        return $('#note-'+noteId);
-    }
+    var eng = new BaseEngine($scope);
     
-    function applyCmd(cmd) {
-        var textarea = getTextarea(cmd.n);
-        var val = textarea.val();
-        if (cmd.Type === 'w') {
-            if (cmd.c[0] === cmd.c[1]) {
-                val = val.insertAt(cmd.c[0], cmd.s);
-            } else {
-                val = val.replaceAt(cmd.c[0], cmd.c[1], cmd.s);
-            }
-        }
-        textarea.val(val);
-    }
-    /*$timeout(function() {
-        applyCmd({m:'w',c:[0,0],s:'ww',n:'1'});
-        applyCmd({m:'w',c:[7,7],s:'\r\n',n:'1'});
-        applyCmd({m:'w',c:[1,6],s:'\t',n:'1'});
-    }, 2000);
-    $timeout(function() {
-        applyCmd({m:'w',c:[0,0],s:'ww',n:'1'});
-        applyCmd({m:'w',c:[7,7],s:'\r\n',n:'1'});
-        applyCmd({m:'w',c:[1,6],s:'\t',n:'1'});
-    }, 6000);*/
-    
-    var acts = [];
     $scope.token = undefined;
     $scope.notes = {};
+    
+    $scope.createNote = function(paragraphId) {
+        $.post('/note/create', {'ParagraphID': paragraphId, 'Name': ''}, function(data) {
+//            eng.appendNote(data);
+        });
+    };
+    
+    $scope.deleteNote = function(note) {
+        $.get('/note/delete', {'id': note.ID}, function(data) {
+            eng.deleteNote(note.ID);
+        });
+    };
+    
     $scope.noteKeyDown = function(note, event) {
         if (event.ctrlKey) {
             return;
         }
-        var textarea = getTextarea(note.ID);
+        var textarea = eng.findTextarea(note.ID);
         var caret = textarea.caret();
         var string = false;
         switch (event.keyCode) {
@@ -56,13 +161,13 @@ angular
         case 8:  // Backspace
             string = '';
             if (caret.begin === caret.end) {
-                caret.end = --caret.begin;
+                --caret.begin;
             }
         break;
         case 46:  // Delete
             string = '';
             if (caret.begin === caret.end) {
-                caret.end = caret.begin;
+                ++caret.end;
             }
         break;
         case 9:  // Tab
@@ -76,7 +181,7 @@ angular
             if (string === false) {
                 string = textarea.val()[caret.begin];
             }
-            var row = {
+            eng.append({
                 UserID: $scope.token,
                 NoteID: note.ID,
                 Type: 'w',
@@ -84,30 +189,15 @@ angular
                 CursorEnd: caret.end,
                 String: string,
                 Timestamp: new Date().getTime()
-            };
-            console.log(row);
-            acts.push(row);
+            });
         }, 1);
     };
-    var isActivated = false;
+    
     $interval(function() {
-        if (acts.length === 0 || isActivated) {
-            return;
-        }
-        isActivated = true;
-        var tmp = acts;
-        acts = [];
-        $.get('/note/save', {'acts': tmp}, function(data) {
-            isActivated = false;
-        }).fail(function() {
-            var oldActs = acts;
-            acts = [];
-            $.each(tmp, function(v) {
-                acts.push(v);
-            });
-            $.each(oldActs, function(v) {
-                acts.push(v);
-            });
-        });
-    });
+        eng.save();
+    }, 3000);
+    
+    $interval(function() {
+        eng.load();
+    }, 5000);
 });

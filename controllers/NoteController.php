@@ -15,7 +15,7 @@ use yii\di\Instance;
 use yii\web\Response;
 use app\models\Note;
 use app\models\NoteAction;
-use app\base\Mutex;
+use app\models\Text;
 
 /**
  * Description of NoteController
@@ -40,6 +40,10 @@ class NoteController extends Controller
      * @var \yii\web\Response
      */
     public $response = 'response';
+    /**
+     * @var string 
+     */
+    public $mutexKey = 'mutex-key';
     
     public function init()
     {
@@ -53,12 +57,7 @@ class NoteController extends Controller
     public function actionSave(array $acts)
     {
         $this->response->format = Response::FORMAT_JSON;
-        $key = 'save-note';
-        $mutex = new Mutex([
-            'id' => $key,
-        ]);
-//        if ($mutex->acquire()) {
-        if ($this->mutex->acquire($key)) {
+        if ($this->mutex->acquire($this->mutexKey)) {
             $tr = $this->db->beginTransaction();
             try {
                 $noteIds = [];
@@ -93,36 +92,77 @@ class NoteController extends Controller
             } catch (\Exception $ex) {
                 $tr->rollBack();
             }
-            $this->mutex->release($key);
+            $this->mutex->release($this->mutexKey);
         }
-//            $mutex->release();
-//        }
+        return [];
+    }
+    
+    public function actionBind($tid, $token, array $reqs = [])
+    {
+        $this->response->format = Response::FORMAT_JSON;
+        $cmds = [];
+        if ($this->mutex->acquire($this->mutexKey)) {
+            $noteIds = [];
+            $where = [];
+            foreach ($reqs as $data) {
+                $noteIds[$data['ID']] = $data['ID'];
+                array_push($where, '(NoteID = '.$data['ID'].' AND ID > '.$data['NoteActionID'].' AND UserID != \''.$token.'\')');
+            }
+            $cmds = NoteAction::find()
+                    ->andWhere(implode(' OR ', $where))
+                    ->orderBy(['Timestamp' => SORT_ASC])
+                    ->all();
+            /* @var $notes Note[] */
+            $notes = Note::find()
+                    ->distinct()
+                    ->joinWith(['paragraph'], false)
+                    ->andWhere(['TextID' => $tid])
+                    ->all();
+            foreach ($notes as $note) {
+                if (!isset($noteIds[$note->ID])) {
+                    array_push($cmds, [
+                        'ID' => 0,
+                        'NoteID' => $note->ID,
+                        'String' => $note->Name,
+                        'ParagraphID' => $note->ParagraphID,
+                        'Type' => NoteAction::MODE_C,
+                    ]);
+                }
+                unset($noteIds[$note->ID]);
+            }
+            foreach ($noteIds as $noteId) {
+                array_push($cmds, [
+                    'NoteID' => $noteId,
+                    'Type' => NoteAction::MODE_R,
+                ]);
+            }
+            $this->mutex->release($this->mutexKey);
+        }
         return [
-            'cmds' => [],
+            'cmds' => $cmds,
         ];
     }
     
-    public function actionTest()
+    public function actionCreate()
     {
-        $note = $this->findModel(1);
-        var_dump($note->Name);
-        $patch = new NoteAction();
-        $patch->NoteID = $note->ID;
-        $patch->CursorBegin = 12;
-        $patch->CursorEnd = 12;
-        $patch->String = 'п';
-        $patch->Type = NoteAction::MODE_W;
-        $note->patch($patch);
-        $patch->CursorBegin = 13;
-        $patch->CursorEnd = 13;
-        $patch->String = 'р';
-        $note->patch($patch);
-        $patch->CursorBegin = 14;
-        $patch->CursorEnd = 14;
-        $patch->String = 'и';
-        $note->patch($patch);
-        var_dump($note->Name);
-        die;
+        $model = new Note();
+        if ($model->load($this->request->post(), '') && $model->save()) {
+            if ($this->request->isAjax) {
+                $this->response->format = Response::FORMAT_JSON;
+                return $model->toArray([], ['NoteActionID']);
+            }
+        }
+        return $this->redirect('index');
+    }
+    
+    public function actionDelete($id)
+    {
+        $this->findModel($id)->delete();
+        if ($this->request->isAjax) {
+            $this->response->format = Response::FORMAT_JSON;
+            return true;
+        }
+        return $this->redirect('index');
     }
     
     public function findModel($id)

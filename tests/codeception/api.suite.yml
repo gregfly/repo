@@ -1,0 +1,9 @@
+class_name: ApiGuyTester
+modules:
+    enabled: [PhpBrowser, REST]
+    config:
+        PhpBrowser:
+            url: http://candidate.local/
+        REST:
+            depends: PhpBrowser
+            url: http://candidate.local/

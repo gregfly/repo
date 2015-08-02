@@ -15,7 +15,7 @@ echo Html::beginTag('div', [
     'class' => 'text-view',
     'ng-app' => 'notes',
     'ng-controller' => 'notesController',
-    'ng-init' => "token = '{$token}'",
+    'ng-init' => "token = '{$token}'; textId = {$model->ID};",
 ]);
 
 echo Html::beginTag('table');
@@ -26,18 +26,25 @@ foreach ($model->paragraphs as $p) {
     ]);
     echo Html::tag('td', $p->Name);
     echo Html::beginTag('td', [
-        'ng-init' => "notes['{$p->ID}'] = ".Json::encode($p->notes),
+        'ng-init' => "notes['{$p->ID}'] = ".Json::encode($p->notesData),
     ]);
     echo Html::beginTag('div', [
         'class' => 'note-form ng-hide',
         'ng-repeat' => "note in notes['{$p->ID}']",
         'ng-show' => '1',
     ]);
-    echo Html::textarea('Note[{{ note.ID }}]', '{{ note.Name }}', [
+    echo Html::tag('div', Html::a(Yii::t('app', 'Remove'), 'javascript:void(0);', [
+        'ng-click' => "deleteNote(note)",
+    ]));
+    echo Html::textarea('Note[{{ note.ID }}]', '', [
+        'id' => 'note-{{ note.ID }}',
+        'ng-model' => 'note.Name',
         'ng-keydown' => 'noteKeyDown(note, $event)',
-        'id' => 'note-{{ note.ID }}'
     ]);
     echo Html::endTag('div');
+    echo Html::a(Yii::t('app', 'Add'), 'javascript:void(0);', [
+        'ng-click' => "createNote('{$p->ID}')",
+    ]);
     echo Html::endTag('td');
     echo Html::endTag('tr');
 }

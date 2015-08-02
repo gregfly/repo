@@ -23,3 +23,5 @@ composer.phar
 
 # Vagrant stores
 .vagrant
+
+tests/_output/*

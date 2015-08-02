@@ -8,3 +8,7 @@
         margin: 0;
         padding: 0;
     }
+    
+    .note-form textarea {
+        min-height: 10em;
+    }

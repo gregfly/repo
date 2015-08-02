@@ -20,6 +20,8 @@ use yii\db\ActiveRecord;
  * @property double $Position
  * @property string $Name
  * 
+ * @property-read array $notesData
+ * 
  * @property Note[] $notes
  */
 class Paragraph extends ActiveRecord
@@ -62,5 +64,17 @@ class Paragraph extends ActiveRecord
     public function getNotes()
     {
         return $this->hasMany(Note::className(), ['ParagraphID' => 'ID']);
+    }
+    
+    /**
+     * @return array
+     */
+    public function getNotesData()
+    {
+        $output = [];
+        foreach ($this->notes as $note) {
+            array_push($output, $note->toArray([], ['NoteActionID']));
+        }
+        return $output;
     }
 }

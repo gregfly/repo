@@ -12,7 +12,9 @@
     "minimum-stability": "dev",
     "require": {
         "yiisoft/yii2": "*",
-        "tesjin/yii2-angularjs": "1.2.28"
+        "tesjin/yii2-angularjs": "1.2.28",
+        "yiisoft/yii2-codeception": "^2.0@dev",
+        "yiisoft/yii2-debug": "^2.0@dev"
     },
     "scripts": {
         "post-create-project-cmd": [
@@ -40,5 +42,8 @@
                 "bower-asset-library": "vendor/bower"
             }
 
+    },
+    "require-dev": {
+        "yiisoft/yii2-faker": "*"
     }
 }

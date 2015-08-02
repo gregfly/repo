@@ -20,6 +20,7 @@ use yii\db\ActiveRecord;
  * @property string $Name
  * 
  * @property Paragraph $paragraph
+ * @property NoteAction[] $noteActions
  */
 class Note extends ActiveRecord
 {
@@ -64,6 +65,35 @@ class Note extends ActiveRecord
     }
     
     /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getNoteActions()
+    {
+        return $this->hasMany(NoteAction::className(), ['NoteID' => 'ID']);
+    }
+    
+    /**
+     * @inheritdoc
+     */
+    public function extraFields()
+    {
+        return [
+            'NoteActionID' => function(Note $m) {
+                return $m->getNoteActions()->max('ID')? : 0;
+            },
+        ];
+    }
+    
+    protected function utf8_substr_replace($str, $repl, $start, $length = null)
+    {
+        preg_match_all('/./us', $str, $ar);
+        preg_match_all('/./us', $repl, $rar);
+        $length = is_int($length) ? $length : utf8_strlen($str);
+        array_splice($ar[0], $start, $length, $rar[0]);
+        return implode($ar[0]);
+    }
+    
+    /**
      * @param \app\models\NoteAction $cmd
      * @return boolean
      */
@@ -74,7 +104,7 @@ class Note extends ActiveRecord
         }
         $text = $this->Name;
         if (NoteAction::MODE_W == $cmd->Type) {
-            $this->Name = substr_replace($text, $cmd->String, $cmd->CursorBegin, $cmd->CursorEnd - $cmd->CursorBegin + (integer)empty($cmd->String));
+            $this->Name = $this->utf8_substr_replace($text, $cmd->String, $cmd->CursorBegin, $cmd->CursorEnd - $cmd->CursorBegin + (integer)empty($cmd->String));
             return true;
         }
         return false;

@@ -30,7 +30,7 @@ class NoteAction extends ActiveRecord
 {
     const MODE_W = 'w';
     const MODE_R = 'r';
-    const MODE_D = 'd';
+    const MODE_C = 'c';
     
     /**
      * @inheritdoc

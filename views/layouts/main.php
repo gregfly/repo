@@ -25,18 +25,9 @@ use yii\widgets\Menu;
         <h1><?= Html::a('My company', ['/site/index']) ?></h1>
     <?= Menu::widget([
         'items' => [
-            ['label' => 'Home', 'url' => ['/site/index']],
-            ['label' => 'About', 'url' => ['/site/about']],
-            Yii::$app->user->isGuest ?
-                ['label' => 'Login', 'url' => ['/site/login']] :
-                [
-                    'label' => 'Logout (' . Yii::$app->user->identity->username . ')' ,
-                    'url' => ['/site/logout'],
-                    'linkOptions' => ['data-method' => 'post'],
-                ],
-            ],
-        ]);
-    ?>
+            ['label' => Yii::t('app', 'Text'), 'url' => ['/text/view', 'id' => 1]],
+        ],
+    ]); ?>
     </div>
 
     <div class="content">

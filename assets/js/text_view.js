@@ -48,17 +48,6 @@ BaseEngine.prototype.exec = function(cmd) {
     console.log('===========exec===========');
     console.log(cmd);
     var note = this.findNote(cmd.NoteID);
-    if (cmd.Type === 'w') {
-        if (cmd.CursorBegin === cmd.CursorEnd) {
-            note.Name = note.Name.insertAt(cmd.CursorBegin, cmd.String);
-        console.log('inserted');
-        } else {
-            note.Name = note.Name.replaceAt(cmd.CursorBegin, cmd.CursorEnd, cmd.String);
-        console.log('replaced');
-        }
-        note.NoteActionID = cmd.ID;
-        console.log(note.Name);
-    }
     if (cmd.Type === 'c') {
         this.appendNote({
             'ID': cmd.NoteID,
@@ -69,6 +58,20 @@ BaseEngine.prototype.exec = function(cmd) {
     }
     if (cmd.Type === 'r') {
         this.deleteNote(cmd.NoteID);
+    }
+    if (!note) {
+        return;
+    }
+    if (cmd.Type === 'w') {
+        if (cmd.CursorBegin === cmd.CursorEnd) {
+            note.Name = note.Name.insertAt(cmd.CursorBegin, cmd.String);
+        console.log('inserted');
+        } else {
+            note.Name = note.Name.replaceAt(cmd.CursorBegin, cmd.CursorEnd, cmd.String);
+        console.log('replaced');
+        }
+        note.NoteActionID = cmd.ID;
+        console.log(note.Name);
     }
 };
 
@@ -84,7 +87,7 @@ BaseEngine.prototype.load = function() {
             tmp.push(v);
         });
     });
-    $.get('/note/bind', {'tid': this._$scope.textId, 'token': this._$scope.token, 'reqs': tmp}, function(data) {
+    $.post('/note/bind', {'tid': this._$scope.textId, 'token': this._$scope.token, 'reqs': tmp}, function(data) {
         $.each(data.cmds, function(key, cmd) {
             self.exec(cmd);
         });
@@ -102,7 +105,7 @@ BaseEngine.prototype.save = function() {
     this._isActivate = true;
     var tmp = this._acts;
     this._acts = [];
-    $.get('/note/save', {'acts': tmp}, function(data) {
+    $.post('/note/save', {'acts': tmp}, function(data) {
         self._isActivate = false;
     }).fail(function() {
         var oldActs = self._acts;

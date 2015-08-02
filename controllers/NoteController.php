@@ -54,9 +54,10 @@ class NoteController extends Controller
         return parent::init();
     }
 
-    public function actionSave(array $acts)
+    public function actionSave()
     {
         $this->response->format = Response::FORMAT_JSON;
+        $acts = $this->request->post('acts', []);
         if ($this->mutex->acquire($this->mutexKey)) {
             $tr = $this->db->beginTransaction();
             try {
@@ -97,9 +98,12 @@ class NoteController extends Controller
         return [];
     }
     
-    public function actionBind($tid, $token, array $reqs = [])
+    public function actionBind()
     {
         $this->response->format = Response::FORMAT_JSON;
+        $tid = $this->request->post('tid');
+        $token = $this->request->post('token');
+        $reqs = $this->request->post('reqs', []);
         $cmds = [];
         if ($this->mutex->acquire($this->mutexKey)) {
             $noteIds = [];

@@ -21,7 +21,9 @@ BaseEngine.prototype.findNote = function(noteId) {
 };
 
 BaseEngine.prototype.appendNote = function(data) {
-    this._$scope.notes[data.ParagraphID].push(data);
+    if (this.findNote(data['ID']) === undefined) {
+        this._$scope.notes[data.ParagraphID].push(data);
+    }
 };
 
 BaseEngine.prototype.deleteNote = function(noteId) {
@@ -93,7 +95,7 @@ BaseEngine.prototype.load = function() {
         });
         self._isActivate = false;
     }).fail(function() {
-        //
+        self._isActivate = false;
     });
 };
 
@@ -116,6 +118,7 @@ BaseEngine.prototype.save = function() {
         $.each(oldActs, function(v) {
             self._acts.push(v);
         });
+        self._isActivate = false;
     });
 };
 
@@ -129,7 +132,7 @@ angular
     
     $scope.createNote = function(paragraphId) {
         $.post('/note/create', {'ParagraphID': paragraphId, 'Name': ''}, function(data) {
-//            eng.appendNote(data);
+            eng.appendNote(data);
         });
     };
     
